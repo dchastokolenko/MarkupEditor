@@ -80,7 +80,7 @@ public struct InsertToolbar: View {
             switch type {
             case .table:
                 showTablePopover = true
-            case .link, .image, .none:
+            case .link, .image, .mention, .none:
                 showTablePopover = false
             }
         }

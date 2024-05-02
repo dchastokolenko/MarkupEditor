@@ -285,3 +285,10 @@ img {
     top: 8px;
     color: #ccc;
 }
+
+.mention {
+    background-color: #f5e7ea;
+    color: #990130;
+    font-weight: medium;
+    font-family: 'Arial', sans-serif;
+}

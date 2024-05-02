@@ -39,6 +39,7 @@ public class ToolbarContents {
         case link
         case image
         case table
+        case mention
     }
     
     public init(
@@ -87,11 +88,13 @@ public struct InsertContents {
     public var link: Bool
     public var image: Bool
     public var table: Bool
+    public var mention: Bool
     
-    public init(link: Bool = true, image: Bool = true, table: Bool = true) {
+    public init(link: Bool = true, image: Bool = true, table: Bool = true, mention: Bool = true) {
         self.link = link
         self.image = image
         self.table = table
+        self.mention = mention
     }
 }
 

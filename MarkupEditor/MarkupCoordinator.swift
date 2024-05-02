@@ -71,6 +71,13 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
             if divId.isEmpty || divId == "editor" {
                 markupDelegate?.markupInput(webView)
                 updateHeight()
+                
+                getCurrentWord { rawWord, error in
+                    if let rawWord {
+                        self.checkForMention(in: rawWord)
+                    }
+                }
+                
             } else if !divId.isEmpty {
                 markupDelegate?.markupInput(webView, divId: divId)
             } else {
@@ -266,5 +273,50 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
         }
         decisionHandler(.allow)
     }
+}
+
+extension MarkupCoordinator {
     
+    @MainActor
+    func getCurrentWord(completionHandler: @escaping (_ result: String?, _ error: Error?) -> Void) {
+        webView.evaluateJavaScript("MU.getCurrentWord()") { result, error in
+            if let error = error {
+                Logger.coordinator.error("Text Parsing Error: \(error.localizedDescription)")
+            }
+            
+            completionHandler(result as? String, error)
+        }
+    }
+    
+    /// Check for mentions in a given text query
+    @MainActor
+    func checkForMention(in text: String) {
+        if !text.isEmpty {
+            var matchedWord: String?
+            var containsMention = false
+            let mentionRegex = try! NSRegularExpression(pattern: "^@(\\w+)(?!.*@)", options: [])
+            let mentionMatches = mentionRegex.matches(
+                in: text,
+                options: [],
+                range: NSRange(location: 0, length: text.utf16.count)
+            )
+            
+            for match in mentionMatches {
+                if let range = Range(match.range(at: 1), in: text) {
+                    matchedWord = String(text[range])
+                    containsMention = true
+                }
+            }
+            
+            if containsMention, let word = matchedWord {
+                mentionRecognized(with: word)
+            }
+        }
+    }
+    
+    /// Function to handle recognized mentions
+    @MainActor
+    private func mentionRecognized(with word: String) {
+        markupDelegate?.markupRecognizedMention(webView, with: word)
+    }
 }

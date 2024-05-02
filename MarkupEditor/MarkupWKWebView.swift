@@ -628,6 +628,13 @@ public class MarkupWKWebView: WKWebView, ObservableObject {
         MarkupEditor.showInsertPopover.type = .table    // Triggers default SwiftUI TableSizer or TableToolbar
     }
     
+    public func showMentionPopover() {
+        guard selectionState.canInsert else { return }
+        startModalInput()                               // Required to deal with focus properly for popovers
+        MarkupEditor.showInsertPopover.type = .mention
+        markupDelegate?.markupShowMentionPopover(self)
+    }
+    
     //MARK: Testing support
 
     /// Set the html content for testing after a delay.
@@ -823,6 +830,18 @@ public class MarkupWKWebView: WKWebView, ObservableObject {
         } catch let error {
             Logger.webview.error("Error inserting local image: \(error.localizedDescription)")
             handler?(cachedImageUrl)
+        }
+    }
+    
+    public func insertMention(searchQuery: String, mention: String, id: String, handler: (()->Void)? = nil) {
+        let script = "MU.insertMention('@\(searchQuery)', '@\(mention)', '\(id)');"
+        
+        becomeFirstResponder()
+        evaluateJavaScript(script) { result, error in
+            if let error = error {
+                Logger.webview.error("Error inserting mention: \(error.localizedDescription)")
+            }
+            handler?()
         }
     }
     

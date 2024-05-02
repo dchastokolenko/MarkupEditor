@@ -142,6 +142,11 @@ public protocol MarkupDelegate {
     /// The toolbar really should be re-enabled.
     func markupDeactivateSearch(_ view: MarkupWKWebView)
     
+    /// This method is called when a mention with a matched word is detected,
+    /// facilitating responses to user interactions involving tagged words.
+    func markupRecognizedMention(_ view: MarkupWKWebView, with matchedWord: String)
+    
+    func markupShowMentionPopover(_ view: MarkupWKWebView)
 }
 
 extension MarkupDelegate {
@@ -355,4 +360,7 @@ extension MarkupDelegate {
         MarkupEditor.searchActive.value = false
     }
     
+    public func markupRecognizedMention(_ view: MarkupWKWebView, with matchedWord: String) {}
+    
+    public func markupShowMentionPopover(_ view: MarkupWKWebView) {}
 }

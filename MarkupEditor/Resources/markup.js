@@ -11569,3 +11569,90 @@ const _percentInt = function(percent, int) {
     return int * percent / 100;
 };
 
+MU.getText = function() {
+    return document.getElementById('editor').innerText;
+};
+
+MU.getCurrentWord = function() {
+    const editor = document.getElementById('editor');
+    const selection = window.getSelection();
+    
+    if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+        const range = selection.getRangeAt(0);
+        const caretPos = range.startOffset;
+        
+        const textContent = range.startContainer.textContent || "";
+        
+        const textUpToCaret = textContent.slice(0, caretPos);
+        
+        const words = textUpToCaret.match(/\S+$/);
+        
+        return words ? words[0] : "";
+    }
+    return "";
+};
+
+// Function to replace the last mention trigger with the full mention
+MU.insertMention = function insertMention(triggerText, fullMention, id) {
+    const mention = _insertMentionAtSelection(triggerText, fullMention);
+    _callbackInput();
+    _callback('selectionChange');
+};
+
+const _insertMentionAtSelection = function(triggerText, fullMention, id) {
+    _restoreSelection();
+    const sel = document.getSelection();
+    if (!sel || (sel.rangeCount === 0)) { return };
+    let range;
+    if (sel.isCollapsed) {
+        range = _wordRangeAtCaret();
+    } else {
+        range = sel.getRangeAt(0);
+    };
+    
+    const mentionNode = document.createElement("span");
+    mentionNode.classList.add("mention");
+    mentionNode.setAttribute("data-mention", fullMention);
+    mentionNode.setAttribute("data-domain", "undefined");
+    mentionNode.setAttribute("data-id", id);
+    mentionNode.textContent = fullMention;
+    
+    if (range) {
+        range.deleteContents();
+        range.insertNode(mentionNode);
+    } else {
+        range = sel.getRangeAt(0);
+        const startContainer = range.startContainer;
+        
+        if (_isTextNode(startContainer)) {
+            
+            if (range.startOffset > triggerText.length) {
+                range.setStart(range.startContainer, range.startOffset - triggerText.length);
+            } else {
+                range.setStart(range.startContainer, 0);
+            }
+            
+            range.deleteContents();
+            range.insertNode(mentionNode);
+        } else {
+            startContainer.parentNode.insertBefore(mentionNode, startContainer);
+        };
+    };
+    
+    const spaceNode = document.createTextNode('\u00A0 ');
+    mentionNode.parentNode.appendChild(spaceNode);
+    
+    range.setStart(mentionNode.firstChild, 0);
+    range.setEndAfter(spaceNode, mentionNode.firstChild.textContent.length + spaceNode.textContent.length);
+    
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    sel.extend(spaceNode)
+    
+    _backupSelection();
+    _callbackInput();
+    _callback('selectionChange')
+    
+    return mentionNode;
+}
