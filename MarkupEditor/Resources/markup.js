@@ -2218,8 +2218,23 @@ MU.editor.addEventListener('keyup', function(ev) {
     const key = ev.key;
     if ((key === 'Backspace') || (key === 'Delete')) {
         if (!resizableImage.isSelected) {
-            _cleanUpSpans();
-            _cleanUpAttributes('style');
+            
+            // Check mention
+            const sel = document.getSelection();
+            if (sel && sel.anchorNode && sel.anchorNode.parentElement) {
+                const element = sel.anchorNode.parentElement;
+                
+                if (element.tagName === "SPAN" && element.classList.contains("mention")) {
+                    deleteMention()
+                    _consoleLog('Mention deleted.')
+                } else {
+                    _cleanUpSpans();
+                    _cleanUpAttributes('style');
+                }
+            } else {
+                _cleanUpSpans();
+                _cleanUpAttributes('style');
+            }
         };
     };
 });
@@ -11655,4 +11670,23 @@ const _insertMentionAtSelection = function(triggerText, fullMention, id) {
     _callback('selectionChange')
     
     return mentionNode;
+}
+
+const deleteMention = function() {
+    _restoreSelection();
+    const sel = document.getSelection();
+    if (sel && sel.anchorNode && sel.anchorNode.parentElement) {
+        const element = sel.anchorNode.parentElement;
+        
+        const mentionRange = document.createRange();
+        const mentionText = element.firstChild;
+        mentionRange.setStart(mentionText, 0);
+        mentionRange.setEnd(mentionText, mentionText.length);
+        sel.removeAllRanges();
+        sel.addRange(mentionRange);
+        _unsetTag(element, sel);
+        _backupSelection();
+        
+        _callbackInput();
+    }
 }
