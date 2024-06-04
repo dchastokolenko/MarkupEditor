@@ -294,7 +294,7 @@ extension MarkupCoordinator {
         if !text.isEmpty {
             var matchedWord: String?
             var containsMention = false
-            let mentionRegex = try! NSRegularExpression(pattern: "^@(\\w+)(?!.*@)", options: [])
+            let mentionRegex = try! NSRegularExpression(pattern: "^@(\\w+(\\.\\w*)*)(?!.*@)", options: [])
             let mentionMatches = mentionRegex.matches(
                 in: text,
                 options: [],
